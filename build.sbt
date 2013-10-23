@@ -19,11 +19,11 @@ resolvers += "Typesafe snapshots" at "http://repo.typesafe.com/typesafe/snapshot
 libraryDependencies ++= {
    val playVersion = "2.2.0"
    Seq(
-     "com.typesafe.play" %% "play" % playVersion,
-     "com.typesafe.play" %% "play-test" % playVersion,
      "io.prediction" % "client" % "0.6.0",
+     "com.typesafe.play" %% "play" % playVersion % "provided",
      "org.specs2" %% "specs2" % "1.14" % "test",
-     "org.mockito" % "mockito-all" % "1.9.5" % "test"
+     "org.mockito" % "mockito-all" % "1.9.5" % "test",
+     "com.typesafe.play" %% "play-test" % playVersion % "test"
    )
 }
 
