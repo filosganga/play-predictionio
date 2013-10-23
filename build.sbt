@@ -1,10 +1,14 @@
 name := "play-predictionio"
 
-version := "0.1.0-SNAPSHOT"
-
 organization := "io.prediction"
 
+version := "0.1.0-SNAPSHOT"
+
+licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
 scalaVersion := "2.10.2"
+
+crossScalaVersions := Seq("2.10.2")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
@@ -17,7 +21,6 @@ libraryDependencies ++= {
    Seq(
      "com.typesafe.play" %% "play" % playVersion,
      "com.typesafe.play" %% "play-test" % playVersion,
-     "com.typesafe" %% "play-plugins-util" % playVersion,
      "io.prediction" % "client" % "0.6.0",
      "org.specs2" %% "specs2" % "1.14" % "test",
      "org.mockito" % "mockito-all" % "1.9.5" % "test"
