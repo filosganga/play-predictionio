@@ -19,10 +19,11 @@
 
 package io.prediction.play
 
-import play.api.{Logger, Application}
-import scala.concurrent._
-import io.prediction.{Client, User}
-import scala.Some
+import play.api.Application
+import io.prediction.{Item, User}
+
+import org.joda.time.DateTime
+import play.api.Play.current
 
 /**
  *
@@ -30,30 +31,88 @@ import scala.Some
  */
 object PredictionIO {
 
-  private val logger = Logger(getClass)
+  /** The exception we are throwing. */
+  private def pluginNotRegisteredError() = throw new Exception("PredictionIO plugin is not registered.")
 
-  private def plugin(implicit app: Application): PredictionIoPlugin = {
+  private def api(implicit app: Application): Api =
+    app.plugin[PredictionIoPlugin].getOrElse(pluginNotRegisteredError()).api
 
-    app.plugin[PredictionIoPlugin] match {
-      case Some(plugin) => plugin
-      case None => throw new Exception("There is no cache plugin registered. Make sure at least one PredictionIoPlugin implementation is enabled.")
-    }
+  def createUser(uid: String, location: Option[Location] = None): User =
+    api.createUser(uid, location)
 
+  def getUser(uid: String): User =
+    api.getUser(uid)
+
+  def deleteUser(uid: String) {
+    api.deleteUser(uid)
   }
 
-  def createUser(uid: String, location: Option[Location] = None)(implicit app: Application): Promise[User] =
-    plugin.promise(userFor(uid, location))
+  def createItem(id: String,
+                 types: Set[String] = Set.empty,
+                 location: Option[Location] = None,
+                 start: Option[DateTime] = None,
+                 end: Option[DateTime] = None) = {
+    api.createItem(id, types, location, end)
+  }
 
-  private def userFor(uid: String, location: Option[Location])(client: Client): User = {
-    client.createUser(location.foldLeft(client.getCreateUserRequestBuilder(uid))((s,x) =>
-      s.latitude(x.latitude).longitude(x.longitude)
-    ))
 
-    val created = location.foldLeft(new User(uid))((s, x)=> s.latitude(x.latitude).longitude(x.longitude))
+  def getItem(id: String): Item =
+    api.getItem(id)
 
-    logger.debug("Created user with uid=" + created.getUid)
+  def deleteItem(id: String) {
+    api.deleteItem(id)
+  }
 
-    created
+  def userActionItem(userId: String,
+                     itemId: String,
+                     action: String,
+                     rate: Option[Int] = None,
+                     dateTime: DateTime = DateTime.now(),
+                     location: Option[Location] = None) {
+
+    api.userActionItem(userId, itemId, action, rate, dateTime, location)
+  }
+
+  def getItemsInfoRecTopN(engine: String,
+                      n: Int = 15,
+                      types: Set[String] = Set.empty,
+                      attributes: Set[String] = Set.empty,
+                      location: Option[Location],
+                      distance: Option[Distance]): Iterable[ItemInfo] = {
+
+    api.getItemsRecTopN(engine, n, types, attributes, location, distance)
+  }
+
+  def getItemsInfoSimTopN(engine: String,
+                      targetId: String,
+                      n: Int = 15,
+                      types: Set[String] = Set.empty,
+                      attributes: Set[String] = Set.empty,
+                      location: Option[Location],
+                      distance: Option[Distance]): Iterable[ItemInfo] = {
+
+    api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance)
+  }
+
+  def getItemsRecTopN(engine: String,
+                          n: Int = 15,
+                          types: Set[String] = Set.empty,
+                          attributes: Set[String] = Set.empty,
+                          location: Option[Location],
+                          distance: Option[Distance]): Iterable[Item] = {
+
+    getItemsInfoRecTopN(engine, n, types, attributes, location, distance).map(x=> getItem(x.id))
+  }
+
+  def getItemsSimTopN(engine: String,
+                          targetId: String,
+                          n: Int = 15,
+                          types: Set[String] = Set.empty,
+                          attributes: Set[String] = Set.empty,
+                          location: Option[Location],
+                          distance: Option[Distance]): Iterable[Item] = {
+
+    api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance).map(x=> getItem(x.id))
   }
 
 }

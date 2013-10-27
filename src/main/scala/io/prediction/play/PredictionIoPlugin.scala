@@ -19,12 +19,10 @@
 
 package io.prediction.play
 
-import play.api.{Play, Logger, Plugin, Application}
+import play.api._
 import io.prediction.Client
-import scala.concurrent._
-import scala.util.{Failure, Success}
 import scala.concurrent.duration._
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import scala.Some
 
 
 /**
@@ -33,45 +31,53 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
  */
 class PredictionIoPlugin(app: Application) extends Plugin {
 
-  protected val logger = Logger(getClass)
+  private lazy val config = app.configuration.getConfig("prediction")
+    .getOrElse(throw app.configuration.reportError("prediction", "prediction is required"))
 
-  private var clientPool: Pool[Client] = null
+  protected lazy val predictionIoApi: Api with ClientProvider = new Api with DefaultClientProvider {
+    protected def cfg: Configuration = config
+  }
+
+  def api: Api = predictionIoApi
 
   override def onStart() {
+    // To init lazy field
+    api
 
-    val cfg = app.configuration.getConfig("prediction").getOrElse(throw new RuntimeException("prediction configuration not found"))
-
-    val appKey = cfg.getString("app-key").getOrElse(throw new RuntimeException)
-    val uri = cfg.getString("uri").getOrElse("http://localhost:8000")
-    val threadLimit = cfg.getInt("thread-limit").getOrElse(100)
-
-    clientPool = new Pool[Client](
-      cfg.getInt("pool-initial-size").getOrElse(5),
-      cfg.getInt("pool-max-size").getOrElse(20),
-      cfg.getInt("pool-acquire-timeout").map(Duration(_, SECONDS)).getOrElse(60 seconds)
-    )(() => createClient(appKey, uri, threadLimit), closeClient)
+    Logger.info("PredictionIO Plugin started.")
   }
 
   override def onStop() {
 
+    predictionIoApi.shutdown()
+
+    Logger.info("PredictionIO Plugin stopped.")
+
   }
 
-  private[play] def promise[T](f: Client => T): Promise[T] = {
+}
 
-    val p = Promise[T]()
 
-    clientPool {client=>
-      execute(client)(f).onComplete {
-        case Success(v) => p.success(v)
-        case Failure(t) => p.failure(t)
-      }
-    }
 
-    p
+trait DefaultClientProvider extends ClientProvider {
+
+  protected def cfg: Configuration
+
+  private lazy val clientPool: Pool[Client] = initClientPool().get
+
+  private def initClientPool() = {
+    for {
+      appKey <- cfg.getString("app-key").orElse(throw cfg.reportError("app-key", "app-key is required"))
+      uri <- cfg.getString("uri").orElse(throw cfg.reportError("uri", "uri is required"))
+      threadLimit <- cfg.getInt("thread-limit").orElse(Some(100))
+    } yield new Pool[Client](5, threadLimit, 5 seconds)(()=>createClient(appKey, uri, 1), closeClient)
   }
 
-  private def execute[T](clientToUse: => Client)(f: Client => T): Future[T] = future {
-    f(clientToUse)
+
+  def withClient[T](f: (Client) => T): T = clientPool(f)
+
+  def shutdown() {
+    clientPool.shutdown()
   }
 
   protected def createClient(appKey: String, uri: String, threadLimit: Int): Client = {
@@ -81,4 +87,6 @@ class PredictionIoPlugin(app: Application) extends Plugin {
   protected def closeClient(client: Client) {
     client.close()
   }
+
+
 }
