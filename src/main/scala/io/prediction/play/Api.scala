@@ -11,8 +11,7 @@ import collection.JavaConversions._
  *
  * @author Filippo De Luca - me@filippodeluca.com
  */
-class Api {
-  self: ClientProvider =>
+trait Api {
 
   def getUser(id: String): User = {
     withClient(_.getUser(id))
@@ -86,34 +85,30 @@ class Api {
     withClient {
       client =>
 
-        val request = rate.foldLeft(location.foldLeft(client.getUserActionItemRequestBuilder(action, itemId).t(dateTime)) {
-          (s, x) =>
-            s.latitude(x.latitude).longitude(x.longitude)
-        }) {
-          (s, x) =>
-            s.rate(x)
-        }
+        val request = client.getUserActionItemRequestBuilder(userId, itemId, action).t(dateTime)
+        rate.foreach(request.rate)
+        location.foreach(l=> request.longitude(l.longitude).latitude(l.latitude))
 
-        client.identify(userId)
         client.userActionItem(request)
     }
   }
 
   def getItemsRecTopN(engine: String,
+                      userId: String,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
-                      location: Option[Location],
-                      distance: Option[Distance]): Iterable[ItemInfo] = {
+                      location: Option[Location] = None,
+                      distance: Option[Distance] = None): Iterable[ItemInfo] = {
 
     withClient{client=>
 
-      val rb = client.getItemRecGetTopNRequestBuilder(engine, n)
+      val rb = client.getItemRecGetTopNRequestBuilder(engine, userId, n)
       rb.attributes(attributes.toArray)
       rb.itypes(types.toArray)
 
       location.foreach(l=> rb.latitude(l.latitude).longitude(l.longitude))
-      distance.foreach{
+      distance.foreach {
         case Km(x) => rb.unit("km").within(x)
         case Mi(x) => rb.unit("mi").within(x)
       }
@@ -128,8 +123,8 @@ class Api {
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
-                      location: Option[Location],
-                      distance: Option[Distance]): Iterable[ItemInfo] = {
+                      location: Option[Location] = None,
+                      distance: Option[Distance] = None): Iterable[ItemInfo] = {
 
     withClient{client=>
 
@@ -148,14 +143,7 @@ class Api {
     }.map{case (id, atts) => ItemInfo(id, attributes.toSet)}
   }
 
-
-}
-
-trait ClientProvider {
-
-  def withClient[T](f: Client => T): T
-
-  def shutdown()
+  protected def withClient[T](f: Client => T): T
 
 }
 

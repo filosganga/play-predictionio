@@ -23,7 +23,6 @@ import play.api.Application
 import io.prediction.{Item, User}
 
 import org.joda.time.DateTime
-import play.api.Play.current
 
 /**
  *
@@ -32,18 +31,18 @@ import play.api.Play.current
 object PredictionIO {
 
   /** The exception we are throwing. */
-  private def pluginNotRegisteredError() = throw new Exception("PredictionIO plugin is not registered.")
+  private val pluginNotRegisteredError = new IllegalStateException("PredictionIO plugin is not registered.")
 
   private def api(implicit app: Application): Api =
-    app.plugin[PredictionIoPlugin].getOrElse(pluginNotRegisteredError()).api
+    app.plugin[HasApi].getOrElse(throw pluginNotRegisteredError).api
 
-  def createUser(uid: String, location: Option[Location] = None): User =
+  def createUser(uid: String, location: Option[Location] = None)(implicit app: Application): User =
     api.createUser(uid, location)
 
-  def getUser(uid: String): User =
+  def getUser(uid: String)(implicit app: Application): User =
     api.getUser(uid)
 
-  def deleteUser(uid: String) {
+  def deleteUser(uid: String)(implicit app: Application) {
     api.deleteUser(uid)
   }
 
@@ -51,15 +50,15 @@ object PredictionIO {
                  types: Set[String] = Set.empty,
                  location: Option[Location] = None,
                  start: Option[DateTime] = None,
-                 end: Option[DateTime] = None) = {
+                 end: Option[DateTime] = None)(implicit app: Application) = {
     api.createItem(id, types, location, end)
   }
 
 
-  def getItem(id: String): Item =
+  def getItem(id: String)(implicit app: Application): Item =
     api.getItem(id)
 
-  def deleteItem(id: String) {
+  def deleteItem(id: String)(implicit app: Application) {
     api.deleteItem(id)
   }
 
@@ -68,19 +67,20 @@ object PredictionIO {
                      action: String,
                      rate: Option[Int] = None,
                      dateTime: DateTime = DateTime.now(),
-                     location: Option[Location] = None) {
+                     location: Option[Location] = None)(implicit app: Application) {
 
     api.userActionItem(userId, itemId, action, rate, dateTime, location)
   }
 
   def getItemsInfoRecTopN(engine: String,
+                      userId: String,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location],
-                      distance: Option[Distance]): Iterable[ItemInfo] = {
+                      distance: Option[Distance])(implicit app: Application): Iterable[ItemInfo] = {
 
-    api.getItemsRecTopN(engine, n, types, attributes, location, distance)
+    api.getItemsRecTopN(engine, userId, n, types, attributes, location, distance)
   }
 
   def getItemsInfoSimTopN(engine: String,
@@ -89,19 +89,20 @@ object PredictionIO {
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location],
-                      distance: Option[Distance]): Iterable[ItemInfo] = {
+                      distance: Option[Distance])(implicit app: Application): Iterable[ItemInfo] = {
 
     api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance)
   }
 
   def getItemsRecTopN(engine: String,
+                          userId: String,
                           n: Int = 15,
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance]): Iterable[Item] = {
+                          distance: Option[Distance])(implicit app: Application): Iterable[Item] = {
 
-    getItemsInfoRecTopN(engine, n, types, attributes, location, distance).map(x=> getItem(x.id))
+    getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).map(x=> getItem(x.id))
   }
 
   def getItemsSimTopN(engine: String,
@@ -110,7 +111,7 @@ object PredictionIO {
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance]): Iterable[Item] = {
+                          distance: Option[Distance])(implicit app: Application): Iterable[Item] = {
 
     api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance).map(x=> getItem(x.id))
   }

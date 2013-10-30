@@ -29,13 +29,15 @@ import scala.Some
  *
  * @author Filippo De Luca - me@filippodeluca.com
  */
-class PredictionIoPlugin(app: Application) extends Plugin {
+class PredictionIoPlugin(app: Application) extends Plugin with HasApi {
 
-  private lazy val config = app.configuration.getConfig("prediction")
+  private lazy val cfg = app.configuration.getConfig("prediction")
     .getOrElse(throw app.configuration.reportError("prediction", "prediction is required"))
 
-  protected lazy val predictionIoApi: Api with ClientProvider = new Api with DefaultClientProvider {
-    protected def cfg: Configuration = config
+  private lazy val clientProvider = new ConfigClientProvider(cfg)
+
+  private lazy val predictionIoApi = new Api {
+    protected def withClient[T](f: (Client) => T): T = clientProvider.withClient(f)
   }
 
   def api: Api = predictionIoApi
@@ -49,7 +51,7 @@ class PredictionIoPlugin(app: Application) extends Plugin {
 
   override def onStop() {
 
-    predictionIoApi.shutdown()
+    clientProvider.shutdown()
 
     Logger.info("PredictionIO Plugin stopped.")
 
@@ -59,34 +61,22 @@ class PredictionIoPlugin(app: Application) extends Plugin {
 
 
 
-trait DefaultClientProvider extends ClientProvider {
+class ConfigClientProvider(cfg: Configuration) extends ClientProvider {
 
-  protected def cfg: Configuration
+  private lazy val client: Client = initClient()
 
-  private lazy val clientPool: Pool[Client] = initClientPool().get
+  private def initClient(): Client = new Client(
+    cfg.getString("app-key").getOrElse(throw cfg.reportError("app-key", "app-key is required")),
+    cfg.getString("uri").getOrElse(throw cfg.reportError("uri", "uri is required")),
+    cfg.getInt("thread-limit").getOrElse(100)
+  )
 
-  private def initClientPool() = {
-    for {
-      appKey <- cfg.getString("app-key").orElse(throw cfg.reportError("app-key", "app-key is required"))
-      uri <- cfg.getString("uri").orElse(throw cfg.reportError("uri", "uri is required"))
-      threadLimit <- cfg.getInt("thread-limit").orElse(Some(100))
-    } yield new Pool[Client](5, threadLimit, 5 seconds)(()=>createClient(appKey, uri, 1), closeClient)
+  def withClient[T](f: (Client) => T): T = {
+    f(client)
   }
-
-
-  def withClient[T](f: (Client) => T): T = clientPool(f)
 
   def shutdown() {
-    clientPool.shutdown()
-  }
-
-  protected def createClient(appKey: String, uri: String, threadLimit: Int): Client = {
-    new Client(appKey, uri, threadLimit)
-  }
-
-  protected def closeClient(client: Client) {
     client.close()
   }
-
 
 }
