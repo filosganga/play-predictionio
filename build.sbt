@@ -1,20 +1,29 @@
 name := "play-predictionio"
 
-organization := "io.prediction"
+organization := "com.github.filosganga"
 
-version := "0.1.0-SNAPSHOT"
+version := "1.0-SNAPSHOT"
+
+homepage := Some(url("http://github.com/filosganga/play-predictionio"))
+
+organizationHomepage := Some(url("http://filippodeluca.com"))
 
 licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+startYear := Some(2013)
+
+
+scmInfo := Some(ScmInfo(
+    url("http://github.com/filosganga/play-predictionio"),
+    "scm:git:git@github.com:filosganga/play-predictionio.git",
+    Some("scm:git:git@github.com:filosganga/play-predictionio.git")
+))
 
 scalaVersion := "2.10.2"
 
 crossScalaVersions := Seq("2.10.2")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
-
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
-
-resolvers += "Typesafe snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
 
 libraryDependencies ++= {
    val playVersion = "2.2.0"
@@ -27,4 +36,26 @@ libraryDependencies ++= {
    )
 }
 
-publishTo := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <developers>
+    <developer>
+      <id>filosganga</id>
+      <name>Filippo De Luca</name>
+      <url>http://filippodeluca.com</url>
+    </developer>
+  </developers>)
+
+
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (version.value.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}

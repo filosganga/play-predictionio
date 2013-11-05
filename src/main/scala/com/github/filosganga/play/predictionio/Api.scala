@@ -1,4 +1,4 @@
-package io.prediction.play
+package com.github.filosganga.play.predictionio
 
 import io.prediction.{User, Item, Client}
 import play.api.Logger

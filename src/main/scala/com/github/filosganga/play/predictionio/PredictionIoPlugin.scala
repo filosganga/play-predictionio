@@ -17,12 +17,10 @@
  * under the License.
  */
 
-package io.prediction.play
+package com.github.filosganga.play.predictionio
 
 import play.api._
 import io.prediction.Client
-import scala.concurrent.duration._
-import scala.Some
 
 
 /**

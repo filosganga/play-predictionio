@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.prediction.play
+package com.github.filosganga.play.predictionio
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -25,6 +25,7 @@ import org.specs2.mock.Mockito
 import io.prediction._
 import scala.Some
 import org.joda.time.DateTime
+import com.github.filosganga.play.predictionio.{Location, Mi, Km, Api}
 
 
 /**

@@ -12,7 +12,7 @@ Install
 
 The dependency declaration should be:
 ```
-"io.prediction" %% "play-predictionio" % "0.1.0-SNAPSHOT"
+"com.github.filosganga" %% "play-predictionio" % "1.0-SNAPSHOT"
 ```
 It is not yet released so you need to publish on your local repository.
 
