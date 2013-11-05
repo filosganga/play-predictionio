@@ -22,7 +22,7 @@ Usage
 
 Creating an User:
 ```
-val userPromise = PredictionIO.createUser(uid)
+val userFuture = PredictionIO.createUser(uid)
 ```
 
 
