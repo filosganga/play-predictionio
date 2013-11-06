@@ -59,3 +59,5 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
+
+resolvers ++= Seq("Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/")
