@@ -89,7 +89,7 @@ class PredictionIoSpecs extends Specification with Mockito {
   trait ThisScope extends Scope {
 
     implicit val application = new FakeApplication(
-      additionalPlugins = Seq("io.prediction.play.MockedHasApi")
+      additionalPlugins = Seq("com.github.filosganga.play.predictionio.MockedHasApi")
     )
 
     lazy val api: Api = application.plugin[MockedHasApi].map(_.api).getOrElse(throw new IllegalStateException("MockedHasApi not registered"))
