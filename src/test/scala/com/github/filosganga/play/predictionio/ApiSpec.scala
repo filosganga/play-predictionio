@@ -23,9 +23,10 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import org.specs2.mock.Mockito
 import io.prediction._
-import scala.Some
 import org.joda.time.DateTime
-import com.github.filosganga.play.predictionio.{Location, Mi, Km, Api}
+
+import scala.concurrent._
+import scala.concurrent.duration._
 
 
 /**
@@ -34,23 +35,25 @@ import com.github.filosganga.play.predictionio.{Location, Mi, Km, Api}
  */
 class ApiSpec extends Specification with Mockito {
 
+  import scala.concurrent.ExecutionContext.Implicits.global
+
 
   "createUser" should {
     "call client.createUser" in new SpecsScope {
-      toTest.createUser("7")
+      Await.ready(toTest.createUser("7"), Duration.Inf)
 
       there was one(client).createUser(any[CreateUserRequestBuilder])
     }
     "call client.getCreateUserRequestBuilder" in {
       "with given user id" in new SpecsScope {
 
-        toTest.createUser("7")
+        Await.ready(toTest.createUser("7"), Duration.Inf)
 
         there was one(client).getCreateUserRequestBuilder(===("7"))
       }
       "with given location" in new SpecsScope {
 
-        toTest.createUser("7", Some(Location(12.5, 25.1)))
+        Await.ready(toTest.createUser("7", Some(Location(12.5, 25.1))), Duration.Inf)
 
         val builder = capture[CreateUserRequestBuilder]
 
@@ -66,7 +69,7 @@ class ApiSpec extends Specification with Mockito {
     "call client.getUser" in {
       "with given user id" in new SpecsScope {
 
-        toTest.getUser("7")
+        Await.ready(toTest.getUser("7"), Duration.Inf)
 
         there was one(client).getUser("7")
       }
@@ -76,14 +79,14 @@ class ApiSpec extends Specification with Mockito {
       val user = givenUser(new User("7"))
       val testValue = toTest.getUser("7")
 
-      testValue shouldEqual user
+      testValue should beEqualTo(user).await
     }
   }
 
   "deleteUser" should {
     "call client.deleteUser" in new SpecsScope {
 
-      toTest.deleteUser("7")
+      Await.ready(toTest.deleteUser("7"), Duration.Inf)
 
       there was one(client).deleteUser("7")
     }
@@ -92,26 +95,26 @@ class ApiSpec extends Specification with Mockito {
   "createItem" should {
     "call client.createItem" in new SpecsScope {
 
-      toTest.createItem("7")
+      Await.ready(toTest.createItem("7"), Duration.Inf)
 
       there was one(client).createItem(any[CreateItemRequestBuilder])
     }
     "call client.getCreateItemRequestBuilder" in {
       "the given item id" in new SpecsScope {
 
-        toTest.createItem("7")
+        Await.ready(toTest.createItem("7"), Duration.Inf)
 
         there was one(client).getCreateItemRequestBuilder(===("7"), any[Array[String]])
       }
       "the given item types" in new SpecsScope {
 
-        toTest.createItem("7", Set("foo", "bar"))
+        Await.ready(toTest.createItem("7", Set("foo", "bar")), Duration.Inf)
 
         there was one(client).getCreateItemRequestBuilder(anyString, ===(Array("foo", "bar")))
       }
       "the given location" in new SpecsScope {
 
-        toTest.createItem("7", location = Some(Location(12.5, 25.1)))
+        Await.ready(toTest.createItem("7", location = Some(Location(12.5, 25.1))), Duration.Inf)
 
         val builder = capture[CreateItemRequestBuilder]
 
@@ -125,7 +128,7 @@ class ApiSpec extends Specification with Mockito {
 
         val expected = new DateTime(1985, 10, 10, 12, 30)
 
-        toTest.createItem("7", start = Some(expected))
+        Await.ready(toTest.createItem("7", start = Some(expected)), Duration.Inf)
 
         val builder = capture[CreateItemRequestBuilder]
 
@@ -138,7 +141,7 @@ class ApiSpec extends Specification with Mockito {
 
         val expected = new DateTime(1985, 10, 10, 12, 30)
 
-        toTest.createItem("7", end = Some(expected))
+        Await.ready(toTest.createItem("7", end = Some(expected)), Duration.Inf)
 
         val builder = capture[CreateItemRequestBuilder]
 
@@ -154,7 +157,7 @@ class ApiSpec extends Specification with Mockito {
     "call client.getItem" in {
       "with the given item id" in new SpecsScope {
 
-        toTest.getItem("7")
+        Await.ready(toTest.getItem("7"), Duration.Inf)
 
         there was one(client).getItem("7")
       }
@@ -164,7 +167,7 @@ class ApiSpec extends Specification with Mockito {
       val item = givenItem(new Item("7", Seq.empty[String].toArray))
       val testValue = toTest.getItem("7")
 
-      testValue shouldEqual item
+      testValue should beEqualTo(item).await
     }
   }
 
@@ -172,7 +175,7 @@ class ApiSpec extends Specification with Mockito {
     "call client.deleteItem" in {
       "with the given item id" in new SpecsScope {
 
-        toTest.deleteItem("7")
+        Await.ready(toTest.deleteItem("7"), Duration.Inf)
 
         there was one(client).deleteItem("7")
       }
@@ -183,13 +186,13 @@ class ApiSpec extends Specification with Mockito {
     "call client.getUserActionItemRequestBuilder" in {
       "with given user id, item id and action" in new SpecsScope {
 
-        toTest.userActionItem("1", "2", "like")
+        Await.ready(toTest.userActionItem("1", "2", "like"), Duration.Inf)
 
         there was one(client).getUserActionItemRequestBuilder(===("1"), ===("2"), ===("like"))
       }
       "with given rate" in new SpecsScope {
 
-        toTest.userActionItem("1", "2", "like", Some(2))
+        Await.ready(toTest.userActionItem("1", "2", "like", Some(2)), Duration.Inf)
 
         val builder = capture[UserActionItemRequestBuilder]
 
@@ -201,7 +204,7 @@ class ApiSpec extends Specification with Mockito {
 
         val expected = new DateTime(1985, 10, 10, 12, 30)
 
-        toTest.userActionItem("1", "2", "like", dateTime = expected)
+        Await.ready(toTest.userActionItem("1", "2", "like", dateTime = expected), Duration.Inf)
 
         val builder = capture[UserActionItemRequestBuilder]
 
@@ -211,7 +214,7 @@ class ApiSpec extends Specification with Mockito {
       }
       "with given location" in new SpecsScope {
 
-        toTest.userActionItem("1", "2", "like", location = Some(Location(12.5, 25.1)))
+        Await.ready(toTest.userActionItem("1", "2", "like", location = Some(Location(12.5, 25.1))), Duration.Inf)
 
         val builder = capture[UserActionItemRequestBuilder]
 
@@ -227,14 +230,14 @@ class ApiSpec extends Specification with Mockito {
     "call client.getItemRecGetTopNRequestBuilder" in {
       "with given engine, uid and limit" in new SpecsScope {
 
-        toTest.getItemsRecTopN("test", "7", 50)
+        Await.ready(toTest.getItemsRecTopN("test", "7", 50), Duration.Inf)
 
         there were one(client).getItemRecGetTopNRequestBuilder("test", "7", 50)
 
       }
       "with given types" in new SpecsScope {
 
-        toTest.getItemsRecTopN("test", "7", 50, Set("one", "two"))
+        Await.ready(toTest.getItemsRecTopN("test", "7", 50, Set("one", "two")), Duration.Inf)
 
         val builder = capture[ItemRecGetTopNRequestBuilder]
 
@@ -245,7 +248,7 @@ class ApiSpec extends Specification with Mockito {
       }
       "with given types" in new SpecsScope {
 
-        toTest.getItemsRecTopN("test", "7", 50, attributes = Set("one", "two"))
+        Await.ready(toTest.getItemsRecTopN("test", "7", 50, attributes = Set("one", "two")), Duration.Inf)
 
         val builder = capture[ItemRecGetTopNRequestBuilder]
 
@@ -256,7 +259,7 @@ class ApiSpec extends Specification with Mockito {
       }
       "with given location" in new SpecsScope {
 
-        toTest.getItemsRecTopN("test", "7", 50, location = Some(Location(34.5, 15.7)))
+        Await.ready(toTest.getItemsRecTopN("test", "7", 50, location = Some(Location(34.5, 15.7))), Duration.Inf)
 
         val builder = capture[ItemRecGetTopNRequestBuilder]
 
@@ -268,7 +271,7 @@ class ApiSpec extends Specification with Mockito {
       "with given distance" in {
         "in Km" in new SpecsScope {
 
-          toTest.getItemsRecTopN("test", "7", 50, distance = Some(Km(10)))
+          Await.ready(toTest.getItemsRecTopN("test", "7", 50, distance = Some(Km(10))), Duration.Inf)
 
           val builder = capture[ItemRecGetTopNRequestBuilder]
 
@@ -279,7 +282,7 @@ class ApiSpec extends Specification with Mockito {
         }
         "in Mi" in new SpecsScope {
 
-          toTest.getItemsRecTopN("test", "7", 50, distance = Some(Mi(10)))
+          Await.ready(toTest.getItemsRecTopN("test", "7", 50, distance = Some(Mi(10))), Duration.Inf)
 
           val builder = capture[ItemRecGetTopNRequestBuilder]
 
@@ -296,14 +299,14 @@ class ApiSpec extends Specification with Mockito {
     "call client.getItemSimGetTopNRequestBuilder" in {
       "with given engine, uid and limit" in new SpecsScope {
 
-        toTest.getItemsSimTopN("test", "7", 50)
+        Await.ready(toTest.getItemsSimTopN("test", "7", 50), Duration.Inf)
 
         there were one(client).getItemSimGetTopNRequestBuilder("test", "7", 50)
 
       }
       "with given types" in new SpecsScope {
 
-        toTest.getItemsSimTopN("test", "7", 50, Set("one", "two"))
+        Await.ready(toTest.getItemsSimTopN("test", "7", 50, Set("one", "two")), Duration.Inf)
 
         val builder = capture[ItemSimGetTopNRequestBuilder]
 
@@ -314,7 +317,7 @@ class ApiSpec extends Specification with Mockito {
       }
       "with given types" in new SpecsScope {
 
-        toTest.getItemsSimTopN("test", "7", 50, attributes = Set("one", "two"))
+        Await.ready(toTest.getItemsSimTopN("test", "7", 50, attributes = Set("one", "two")), Duration.Inf)
 
         val builder = capture[ItemSimGetTopNRequestBuilder]
 
@@ -325,7 +328,7 @@ class ApiSpec extends Specification with Mockito {
       }
       "with given location" in new SpecsScope {
 
-        toTest.getItemsSimTopN("test", "7", 50, location = Some(Location(34.5, 15.7)))
+        Await.ready(toTest.getItemsSimTopN("test", "7", 50, location = Some(Location(34.5, 15.7))), Duration.Inf)
 
         val builder = capture[ItemSimGetTopNRequestBuilder]
 
@@ -337,7 +340,7 @@ class ApiSpec extends Specification with Mockito {
       "with given distance" in {
         "in Km" in new SpecsScope {
 
-          toTest.getItemsSimTopN("test", "7", 50, distance = Some(Km(10)))
+          Await.ready(toTest.getItemsSimTopN("test", "7", 50, distance = Some(Km(10))), Duration.Inf)
 
           val builder = capture[ItemSimGetTopNRequestBuilder]
 
@@ -348,7 +351,7 @@ class ApiSpec extends Specification with Mockito {
         }
         "in Mi" in new SpecsScope {
 
-          toTest.getItemsSimTopN("test", "7", 50, distance = Some(Mi(10)))
+          Await.ready(toTest.getItemsSimTopN("test", "7", 50, distance = Some(Mi(10))), Duration.Inf)
 
           val builder = capture[ItemSimGetTopNRequestBuilder]
 
@@ -360,8 +363,6 @@ class ApiSpec extends Specification with Mockito {
       }
     }
   }
-
-
 
 
   trait SpecsScope extends Scope {

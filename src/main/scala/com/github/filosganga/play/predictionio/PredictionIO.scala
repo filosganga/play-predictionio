@@ -23,6 +23,8 @@ import play.api.Application
 import io.prediction.{Item, User}
 
 import org.joda.time.DateTime
+import play.api.libs.concurrent.Akka
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  *
@@ -36,13 +38,15 @@ object PredictionIO {
   private def api(implicit app: Application): Api =
     app.plugin[HasApi].getOrElse(throw pluginNotRegisteredError).api
 
-  def createUser(uid: String, location: Option[Location] = None)(implicit app: Application): User =
+  def createUser(uid: String, location: Option[Location] = None)(implicit app: Application, ec: ExecutionContext): Future[User] = {
     api.createUser(uid, location)
+  }
 
-  def getUser(uid: String)(implicit app: Application): User =
+  def getUser(uid: String)(implicit app: Application, ec: ExecutionContext): Future[User] = {
     api.getUser(uid)
+  }
 
-  def deleteUser(uid: String)(implicit app: Application) {
+  def deleteUser(uid: String)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
     api.deleteUser(uid)
   }
 
@@ -50,15 +54,17 @@ object PredictionIO {
                  types: Set[String] = Set.empty,
                  location: Option[Location] = None,
                  start: Option[DateTime] = None,
-                 end: Option[DateTime] = None)(implicit app: Application) = {
+                 end: Option[DateTime] = None)(implicit app: Application, ec: ExecutionContext) = {
+    implicit val ec = Akka.system.dispatcher
+
     api.createItem(id, types, location, end)
   }
 
 
-  def getItem(id: String)(implicit app: Application): Item =
+  def getItem(id: String)(implicit app: Application, ec: ExecutionContext): Future[Item] =
     api.getItem(id)
 
-  def deleteItem(id: String)(implicit app: Application) {
+  def deleteItem(id: String)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
     api.deleteItem(id)
   }
 
@@ -67,53 +73,57 @@ object PredictionIO {
                      action: String,
                      rate: Option[Int] = None,
                      dateTime: DateTime = DateTime.now(),
-                     location: Option[Location] = None)(implicit app: Application) {
+                     location: Option[Location] = None)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
 
     api.userActionItem(userId, itemId, action, rate, dateTime, location)
   }
 
   def getItemsInfoRecTopN(engine: String,
-                      userId: String,
-                      n: Int = 15,
-                      types: Set[String] = Set.empty,
-                      attributes: Set[String] = Set.empty,
-                      location: Option[Location],
-                      distance: Option[Distance])(implicit app: Application): Iterable[ItemInfo] = {
-
-    api.getItemsRecTopN(engine, userId, n, types, attributes, location, distance)
-  }
-
-  def getItemsInfoSimTopN(engine: String,
-                      targetId: String,
-                      n: Int = 15,
-                      types: Set[String] = Set.empty,
-                      attributes: Set[String] = Set.empty,
-                      location: Option[Location],
-                      distance: Option[Distance])(implicit app: Application): Iterable[ItemInfo] = {
-
-    api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance)
-  }
-
-  def getItemsRecTopN(engine: String,
                           userId: String,
                           n: Int = 15,
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance])(implicit app: Application): Iterable[Item] = {
+                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
 
-    getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).map(x=> getItem(x.id))
+    api.getItemsRecTopN(engine, userId, n, types, attributes, location, distance)
   }
 
-  def getItemsSimTopN(engine: String,
+  def getItemsInfoSimTopN(engine: String,
                           targetId: String,
                           n: Int = 15,
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance])(implicit app: Application): Iterable[Item] = {
+                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
 
-    api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance).map(x=> getItem(x.id))
+    api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance)
+  }
+
+  def getItemsRecTopN(engine: String,
+                      userId: String,
+                      n: Int = 15,
+                      types: Set[String] = Set.empty,
+                      attributes: Set[String] = Set.empty,
+                      location: Option[Location],
+                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
+
+    getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).flatMap {
+      xs => Future.sequence(xs.map(x => getItem(x.id)))
+    }
+  }
+
+  def getItemsSimTopN(engine: String,
+                      targetId: String,
+                      n: Int = 15,
+                      types: Set[String] = Set.empty,
+                      attributes: Set[String] = Set.empty,
+                      location: Option[Location],
+                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
+
+    getItemsInfoSimTopN(engine, targetId, n, types, attributes, location, distance).flatMap {
+      xs => Future.sequence(xs.map(x => getItem(x.id)))
+    }
   }
 
 }

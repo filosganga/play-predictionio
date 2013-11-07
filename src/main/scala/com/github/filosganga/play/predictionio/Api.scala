@@ -5,6 +5,7 @@ import play.api.Logger
 import org.joda.time.DateTime
 
 import collection.JavaConversions._
+import scala.concurrent._
 
 
 /**
@@ -13,12 +14,14 @@ import collection.JavaConversions._
  */
 trait Api {
 
-  def getUser(id: String): User = {
+  def getUser(id: String)(implicit ec: ExecutionContext): Future[User] = future {
     withClient(_.getUser(id))
   }
 
-  def createUser(uid: String, location: Option[Location] = None): User =
+
+  def createUser(uid: String, location: Option[Location] = None)(implicit ec: ExecutionContext): Future[User] = future {
     withClient(userFor(uid, location))
+  }
 
   private def userFor(uid: String, location: Option[Location])(client: Client): User = {
     client.createUser(location.foldLeft(client.getCreateUserRequestBuilder(uid))((s, x) =>
@@ -32,11 +35,11 @@ trait Api {
     created
   }
 
-  def deleteUser(uid: String) {
+  def deleteUser(uid: String)(implicit ec: ExecutionContext): Future[Unit] = future {
     withClient(_.deleteUser(uid))
   }
 
-  def getItem(id: String): Item = {
+  def getItem(id: String)(implicit ec: ExecutionContext): Future[Item] = future {
     withClient(_.getItem(id))
   }
 
@@ -45,7 +48,7 @@ trait Api {
                  types: Set[String] = Set.empty,
                  location: Option[Location] = None,
                  start: Option[DateTime] = None,
-                 end: Option[DateTime] = None): Item = {
+                 end: Option[DateTime] = None)(implicit ec: ExecutionContext): Future[Item] = future {
 
     withClient(itemFor(id, types, location, start, end))
   }
@@ -72,7 +75,7 @@ trait Api {
     created
   }
 
-  def deleteItem(id: String) {
+  def deleteItem(id: String)(implicit ec: ExecutionContext): Future[Unit] = future {
     withClient(_.deleteItem(id))
   }
 
@@ -81,13 +84,13 @@ trait Api {
                      action: String,
                      rate: Option[Int] = None,
                      dateTime: DateTime = DateTime.now(),
-                     location: Option[Location] = None) {
+                     location: Option[Location] = None)(implicit ec: ExecutionContext): Future[Unit] = future {
     withClient {
       client =>
 
         val request = client.getUserActionItemRequestBuilder(userId, itemId, action).t(dateTime)
         rate.foreach(request.rate)
-        location.foreach(l=> request.longitude(l.longitude).latitude(l.latitude))
+        location.foreach(l => request.longitude(l.longitude).latitude(l.latitude))
 
         client.userActionItem(request)
     }
@@ -99,23 +102,26 @@ trait Api {
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location] = None,
-                      distance: Option[Distance] = None): Iterable[ItemInfo] = {
+                      distance: Option[Distance] = None)(implicit ec: ExecutionContext): Future[Iterable[ItemInfo]] = future {
 
-    withClient{client=>
+    withClient {
+      client =>
 
-      val rb = client.getItemRecGetTopNRequestBuilder(engine, userId, n)
-      rb.attributes(attributes.toArray)
-      rb.itypes(types.toArray)
+        val rb = client.getItemRecGetTopNRequestBuilder(engine, userId, n)
+        rb.attributes(attributes.toArray)
+        rb.itypes(types.toArray)
 
-      location.foreach(l=> rb.latitude(l.latitude).longitude(l.longitude))
-      distance.foreach {
-        case Km(x) => rb.unit("km").within(x)
-        case Mi(x) => rb.unit("mi").within(x)
-      }
+        location.foreach(l => rb.latitude(l.latitude).longitude(l.longitude))
+        distance.foreach {
+          case Km(x) => rb.unit("km").within(x)
+          case Mi(x) => rb.unit("mi").within(x)
+        }
 
-      client.getItemRecTopNWithAttributes(rb)
+        client.getItemRecTopNWithAttributes(rb)
 
-    }.map{case (id, atts) => ItemInfo(id, attributes.toSet)}
+    }.map {
+      case (id, atts) => ItemInfo(id, attributes.toSet)
+    }
   }
 
   def getItemsSimTopN(engine: String,
@@ -124,23 +130,26 @@ trait Api {
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location] = None,
-                      distance: Option[Distance] = None): Iterable[ItemInfo] = {
+                      distance: Option[Distance] = None)(implicit ec: ExecutionContext): Future[Iterable[ItemInfo]] = future {
 
-    withClient{client=>
+    withClient {
+      client =>
 
-      val rb = client.getItemSimGetTopNRequestBuilder(engine, targetId, n)
-      rb.attributes(attributes.toArray)
-      rb.itypes(types.toArray)
+        val rb = client.getItemSimGetTopNRequestBuilder(engine, targetId, n)
+        rb.attributes(attributes.toArray)
+        rb.itypes(types.toArray)
 
-      location.foreach(l=> rb.latitude(l.latitude).longitude(l.longitude))
-      distance.foreach{
-        case Km(x) => rb.unit("km").within(x)
-        case Mi(x) => rb.unit("mi").within(x)
-      }
+        location.foreach(l => rb.latitude(l.latitude).longitude(l.longitude))
+        distance.foreach {
+          case Km(x) => rb.unit("km").within(x)
+          case Mi(x) => rb.unit("mi").within(x)
+        }
 
-      client.getItemSimTopNWithAttributes(rb)
+        client.getItemSimTopNWithAttributes(rb)
 
-    }.map{case (id, atts) => ItemInfo(id, attributes.toSet)}
+    }.map {
+      case (id, atts) => ItemInfo(id, attributes.toSet)
+    }
   }
 
   protected def withClient[T](f: Client => T): T

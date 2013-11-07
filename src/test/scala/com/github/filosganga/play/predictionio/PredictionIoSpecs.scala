@@ -7,13 +7,14 @@ import org.specs2.mock.Mockito
 import play.api.test._
 import play.api.test.Helpers._
 import org.joda.time.DateTime
-import com.github.filosganga.play.predictionio.{PredictionIO, Location, Api}
 
 /**
  *
  * @author Filippo De Luca - me@filippodeluca.com
  */
 class PredictionIoSpecs extends Specification with Mockito {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
 
   "createUser" should {
