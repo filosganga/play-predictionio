@@ -88,7 +88,7 @@ trait Api {
     withClient {
       client =>
 
-        val request = client.getUserActionItemRequestBuilder(userId, itemId, action).t(dateTime)
+        val request = client.getUserActionItemRequestBuilder(userId, action, itemId).t(dateTime)
         rate.foreach(request.rate)
         location.foreach(l => request.longitude(l.longitude).latitude(l.latitude))
 

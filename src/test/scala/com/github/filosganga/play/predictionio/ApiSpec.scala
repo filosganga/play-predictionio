@@ -188,7 +188,7 @@ class ApiSpec extends Specification with Mockito {
 
         Await.ready(toTest.userActionItem("1", "2", "like"), Duration.Inf)
 
-        there was one(client).getUserActionItemRequestBuilder(===("1"), ===("2"), ===("like"))
+        there was one(client).getUserActionItemRequestBuilder(===("1"), ===("like"), ===("2"))
       }
       "with given rate" in new SpecsScope {
 
