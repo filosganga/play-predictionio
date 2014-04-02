@@ -88,7 +88,7 @@ trait Api {
     withClient {
       client =>
 
-        val request = client.getUserActionItemRequestBuilder(userId, itemId, action).t(dateTime)
+        val request = client.getUserActionItemRequestBuilder(userId, action, itemId).t(dateTime)
         rate.foreach(request.rate)
         location.foreach(l => request.longitude(l.longitude).latitude(l.latitude))
 
@@ -123,7 +123,31 @@ trait Api {
       case (id, atts) => ItemInfo(id, attributes.toSet)
     }
   }
+  def getItemsRecTopNM(engine: String,
+                      userId: String,
+                      n: Int = 15,
+                      types: Set[String] = Set.empty,
+                      attributes: Set[String] = Set.empty,
+                      location: Option[Location] = None,
+                      distance: Option[Distance] = None)(implicit ec: ExecutionContext): Future[Map[String,Set[String]]] = future {
 
+    withClient {
+      client =>
+
+        val rb = client.getItemRecGetTopNRequestBuilder(engine, userId, n)
+        rb.attributes(attributes.toArray)
+        rb.itypes(types.toArray)
+
+        location.foreach(l => rb.latitude(l.latitude).longitude(l.longitude))
+        distance.foreach {
+          case Km(x) => rb.unit("km").within(x)
+          case Mi(x) => rb.unit("mi").within(x)
+        }
+
+        client.getItemRecTopNWithAttributes(rb)
+
+    }.toMap.mapValues(_.toSet)
+  }
   def getItemsSimTopN(engine: String,
                       targetId: String,
                       n: Int = 15,

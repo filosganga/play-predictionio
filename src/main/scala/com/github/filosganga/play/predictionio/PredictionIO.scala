@@ -89,6 +89,17 @@ object PredictionIO {
     api.getItemsRecTopN(engine, userId, n, types, attributes, location, distance)
   }
 
+  def getItemsInfoRecTopNM(engine: String,
+                          userId: String,
+                          n: Int = 15,
+                          types: Set[String] = Set.empty,
+                          attributes: Set[String] = Set.empty,
+                          location: Option[Location],
+                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Map[String,Set[String]]] = {
+
+    api.getItemsRecTopNM(engine, userId, n, types, attributes, location, distance)
+  }
+
   def getItemsInfoSimTopN(engine: String,
                           targetId: String,
                           n: Int = 15,
