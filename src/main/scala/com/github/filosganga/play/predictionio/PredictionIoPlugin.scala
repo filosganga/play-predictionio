@@ -20,7 +20,6 @@
 package com.github.filosganga.play.predictionio
 
 import play.api._
-import io.prediction.Client
 
 
 /**
@@ -29,13 +28,9 @@ import io.prediction.Client
  */
 class PredictionIoPlugin(app: Application) extends Plugin with HasApi {
 
-  private lazy val cfg = app.configuration.getConfig("prediction")
-    .getOrElse(throw app.configuration.reportError("prediction", "prediction is required"))
-
-  private lazy val clientProvider = new ConfigClientProvider(cfg)
-
-  private lazy val predictionIoApi = new Api {
-    protected def withClient[T](f: (Client) => T): T = clientProvider.withClient(f)
+  private lazy val predictionIoApi = new Api with ConfigEndpointProvider {
+    override def cfg: Configuration = app.configuration.getConfig("prediction-io")
+      .getOrElse(throw app.configuration.reportError("prediction-io", "prediction-io is required"))
   }
 
   def api: Api = predictionIoApi
@@ -49,8 +44,6 @@ class PredictionIoPlugin(app: Application) extends Plugin with HasApi {
 
   override def onStop() {
 
-    clientProvider.shutdown()
-
     Logger.info("PredictionIO Plugin stopped.")
 
   }
@@ -59,22 +52,13 @@ class PredictionIoPlugin(app: Application) extends Plugin with HasApi {
 
 
 
-class ConfigClientProvider(cfg: Configuration) extends ClientProvider {
+trait ConfigEndpointProvider extends EndpointProvider {
 
-  private lazy val client: Client = initClient()
+  def cfg: Configuration
 
-  private def initClient(): Client = new Client(
-    cfg.getString("app-key").getOrElse(throw cfg.reportError("app-key", "app-key is required")),
-    cfg.getString("uri").getOrElse(throw cfg.reportError("uri", "uri is required")),
-    cfg.getInt("thread-limit").getOrElse(100)
-  )
+  override val apiKey: String =
+    cfg.getString("app-key").getOrElse(throw cfg.reportError("app-key", "app-key is required"))
 
-  def withClient[T](f: (Client) => T): T = {
-    f(client)
-  }
-
-  def shutdown() {
-    client.close()
-  }
-
+  override val endpoint: String =
+    cfg.getString("endpoint").getOrElse(throw cfg.reportError("endpoint", "endpoint is required"))
 }

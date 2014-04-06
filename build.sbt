@@ -19,16 +19,15 @@ scmInfo := Some(ScmInfo(
     Some("scm:git:git@github.com:filosganga/play-predictionio.git")
 ))
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
-crossScalaVersions := Seq("2.10.2")
+crossScalaVersions := Seq("2.10.3")
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
 libraryDependencies ++= {
-   val playVersion = "2.2.0"
+   val playVersion = "2.2.2"
    Seq(
-     "io.prediction" % "client" % "0.6.1",
      "com.typesafe.play" %% "play" % playVersion % "provided",
      "org.specs2" %% "specs2" % "1.14" % "test",
      "org.mockito" % "mockito-all" % "1.9.5" % "test",
@@ -38,14 +37,19 @@ libraryDependencies ++= {
 
 pomIncludeRepository := { _ => false }
 
-pomExtra := (
+pomExtra :=
   <developers>
     <developer>
       <id>filosganga</id>
       <name>Filippo De Luca</name>
       <url>http://filippodeluca.com</url>
+      <email>me@filippodeluca.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>GMT</timezone>
     </developer>
-  </developers>)
+  </developers>
 
 
 publishMavenStyle := true

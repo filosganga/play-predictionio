@@ -17,10 +17,16 @@
  * under the License.
  */
 
-package com.github.filosganga.play.predictionio
+package com.github.filosganga.play
+
+
 
 /**
  *
- * @author Filippo De Luca - me@filippodeluca.com
+ * @author Filippo De Luca - fdeluca@expedia.com
  */
-case class Location(longitude: Double, latitude: Double)
+package object predictionio {
+
+
+
+}

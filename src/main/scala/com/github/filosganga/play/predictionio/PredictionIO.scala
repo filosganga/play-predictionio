@@ -20,10 +20,8 @@
 package com.github.filosganga.play.predictionio
 
 import play.api.Application
-import io.prediction.{Item, User}
 
 import org.joda.time.DateTime
-import play.api.libs.concurrent.Akka
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -38,8 +36,16 @@ object PredictionIO {
   private def api(implicit app: Application): Api =
     app.plugin[HasApi].getOrElse(throw pluginNotRegisteredError).api
 
-  def createUser(uid: String, location: Option[Location] = None)(implicit app: Application, ec: ExecutionContext): Future[User] = {
-    api.createUser(uid, location)
+  def createUser(uid: String,
+                 active: Boolean = true,
+                 location: Option[Location] = None,
+                 customs: Map[String, String] = Map.empty)
+                (implicit app: Application, ec: ExecutionContext): Future[User] = {
+    createUser(User(uid, active, location, customs))
+  }
+
+  def createUser(user: User)(implicit app: Application, ec: ExecutionContext): Future[User] = {
+    api.createUser(user)
   }
 
   def getUser(uid: String)(implicit app: Application, ec: ExecutionContext): Future[User] = {
@@ -51,15 +57,21 @@ object PredictionIO {
   }
 
   def createItem(id: String,
-                 types: Set[String] = Set.empty,
+                 types: Set[String],
+                 active: Boolean = true,
                  location: Option[Location] = None,
                  start: Option[DateTime] = None,
-                 end: Option[DateTime] = None)(implicit app: Application, ec: ExecutionContext) = {
-    implicit val ec = Akka.system.dispatcher
-
-    api.createItem(id, types, location, end)
+                 end: Option[DateTime] = None,
+                 price: Option[Double] = None,
+                 profit: Option[Double] = None,
+                 customs: Map[String, String] = Map.empty)
+                (implicit app: Application, ec: ExecutionContext): Future[Item] = {
+    createItem(Item(id, types, active, location, start, end, price, profit, customs))
   }
 
+  def createItem(item: Item)(implicit app: Application, ec: ExecutionContext): Future[Item] = {
+    api.createItem(item)
+  }
 
   def getItem(id: String)(implicit app: Application, ec: ExecutionContext): Future[Item] =
     api.getItem(id)
@@ -72,10 +84,16 @@ object PredictionIO {
                      itemId: String,
                      action: String,
                      rate: Option[Int] = None,
-                     dateTime: DateTime = DateTime.now(),
-                     location: Option[Location] = None)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
+                     dateTime: Option[DateTime] = None,
+                     location: Option[Location] = None,
+                     customs: Map[String, String] = Map.empty)
+                    (implicit app: Application, ec: ExecutionContext): Future[Action] = {
 
-    api.userActionItem(userId, itemId, action, rate, dateTime, location)
+    api.userAction(Action(userId, itemId, action, rate, location, dateTime, customs))
+  }
+
+  def userActionItem(action: Action)(implicit app: Application, ec: ExecutionContext): Future[Action] = {
+    api.userAction(action)
   }
 
   def getItemsInfoRecTopN(engine: String,
