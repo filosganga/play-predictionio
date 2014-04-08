@@ -112,9 +112,12 @@ trait Api {
       }.getOrElse(Nil)
 
 
+    lazy val queryStr= s" id($userId) in engine($engine). Searching with types [${types.mkString(",")}], attributes [${attributes.mkString(",")}}], location ($location) and distance ($distance)"
     WS.url(s"$endpoint/engines/itemrec/$engine/topn.json").withQueryString(parameters: _*).get().flatMap {
-      case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
-      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
+      case response if response.status == 404 && isNoRecommendationMessage(response.json)=> Future.failed(new NoRecommendationException(response.statusText+ queryStr))
+      case response if response.status >= 500 => Future.failed(new PredictionIOServerException(response.body))
+      case response if response.status >= 300 => Future.failed(new PredictionIOClientException(response.body))
+      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new PredictionIOClientException(response.body)), Future.successful)
     }
   }
 
@@ -142,12 +145,20 @@ trait Api {
         case Mi(value) => Seq("pio_within" -> s"$value", "pio_unit" -> "mi")
       }.getOrElse(Nil)
 
-
+    lazy val queryStr= s" id($targetId) in engine($engine). Searching with types [${types.mkString(",")}], attributes [${attributes.mkString(",")}}], location ($location) and distance ($distance)"
     WS.url(s"$endpoint/engines/itemsim/$engine/topn.json").withQueryString(parameters: _*).get().flatMap {
-      case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
-      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
+      case response if response.status == 404 && isNoRecommendationMessage(response.json)=> Future.failed(new NoRecommendationException(response.statusText+ queryStr))
+      case response if response.status >= 500 => Future.failed(new PredictionIOServerException(response.body))
+      case response if response.status >= 300 => Future.failed(new PredictionIOClientException(response.body))
+      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new PredictionIOClientException(response.body)), Future.successful)
     }
   }
 
+  def isNoRecommendationMessage(json:JsValue):Boolean={
+    (json\"message").validate[String].fold(
+    errors => false,
+    message => message.contains("Cannot find recommendation for user.")
+    )
+  }
 
 }
