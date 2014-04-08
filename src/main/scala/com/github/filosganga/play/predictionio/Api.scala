@@ -1,7 +1,9 @@
-package com.github.filosganga.play.predictionio
+package com.github.filosganga.play
+package predictionio
 
 
 import scala.concurrent._
+import scala.collection.immutable
 import play.api.libs.ws.WS
 import play.api.libs.json._
 
@@ -92,7 +94,7 @@ trait Api {
                       attributes: Set[String] = Set.empty,
                       location: Option[Location] = None,
                       distance: Option[Distance] = None)
-                     (implicit ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
+                     (implicit ec: ExecutionContext): Future[immutable.Seq[ItemInfo]] = {
 
     import format._
 
@@ -112,7 +114,7 @@ trait Api {
 
     WS.url(s"$endpoint/engines/itemrec/$engine/topn.json").withQueryString(parameters: _*).get().flatMap {
       case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
-      case response => Json.fromJson[Iterable[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
+      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
     }
   }
 
@@ -123,7 +125,7 @@ trait Api {
                       attributes: Set[String] = Set.empty,
                       location: Option[Location] = None,
                       distance: Option[Distance] = None)
-                     (implicit ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
+                     (implicit ec: ExecutionContext): Future[immutable.Seq[ItemInfo]] = {
 
     import format._
 
@@ -143,7 +145,7 @@ trait Api {
 
     WS.url(s"$endpoint/engines/itemsim/$engine/topn.json").withQueryString(parameters: _*).get().flatMap {
       case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
-      case response => Json.fromJson[Iterable[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
+      case response => Json.fromJson[immutable.Seq[ItemInfo]](response.json).fold(invalid => Future.failed(new RuntimeException), Future.successful)
     }
   }
 
