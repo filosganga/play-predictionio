@@ -23,7 +23,7 @@ import play.api.Application
 
 import org.joda.time.DateTime
 import scala.concurrent.{ExecutionContext, Future}
-
+import scala.collection.immutable
 /**
  *
  * @author Filippo De Luca - me@filippodeluca.com
@@ -102,7 +102,7 @@ object PredictionIO {
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
+                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[ItemInfo]] = {
 
     api.getItemsRecTopN(engine, userId, n, types, attributes, location, distance)
   }
@@ -113,7 +113,7 @@ object PredictionIO {
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
                           location: Option[Location],
-                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[ItemInfo]] = {
+                          distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[ItemInfo]] = {
 
     api.getItemsSimTopN(engine, targetId, n, types, attributes, location, distance)
   }
@@ -124,7 +124,7 @@ object PredictionIO {
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location],
-                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
+                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[Item]] = {
 
     getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).flatMap {
       xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
@@ -137,7 +137,7 @@ object PredictionIO {
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
                       location: Option[Location],
-                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
+                      distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[Item]] = {
 
     getItemsInfoSimTopN(engine, targetId, n, types, attributes, location, distance).flatMap {
       xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
