@@ -28,6 +28,27 @@ import org.joda.time.DateTime
  * @author Filippo De Luca - fdeluca@expedia.com
  */
 class JsonFormat(appKey: String) {
+  implicit val u2iActionFormat = new Format[U2IAction] {
+    def reads(json: JsValue): JsResult[U2IAction] = json.validate[String] map {
+      case "like" => U2IAction.Like
+      case "dislike" => U2IAction.Dislike
+      case "rate" => U2IAction.Rate
+      case "view" => U2IAction.View
+      case "viewDetails" => U2IAction.ViewDetails
+      case "conversion" => U2IAction.Conversion
+    }
+    def writes(o: U2IAction): JsValue = JsString(o.toString.toLowerCase)
+  }
+
+  implicit val userIdFormat= new Format[UserId] {
+    override def writes(o: UserId): JsValue = JsString(o.value)
+    override def reads(json: JsValue): JsResult[UserId] = json.validate[String].map(UserId.apply)
+  }
+
+  implicit val itemIdFormat= new Format[ItemId] {
+    override def writes(o: ItemId): JsValue = JsString(o.value)
+    override def reads(json: JsValue): JsResult[ItemId] = json.validate[String].map(ItemId.apply)
+  }
 
   val customsReads: Reads[Map[String, String]] = Reads {
     case JsObject(fields) =>
@@ -48,7 +69,7 @@ class JsonFormat(appKey: String) {
   }
 
   implicit val userReads: Reads[User] = (
-    (__ \ "pio_uid").read[String] and
+    (__ \ "pio_uid").read[UserId] and
       (__ \ "pio_inactive").readNullable[Boolean]
         .map(_.getOrElse(false))
         .map(!_) and
@@ -57,7 +78,7 @@ class JsonFormat(appKey: String) {
     )(User.apply _)
 
   implicit val userWrites: Writes[User] = (
-    (__ \ "pio_uid").write[String] and
+    (__ \ "pio_uid").write[UserId] and
       (__ \ "pio_appkey").write[String] and
       (__ \ "pio_inactive").write[Boolean].contramap {
         x: Boolean => !x
@@ -67,7 +88,7 @@ class JsonFormat(appKey: String) {
     )(user => (user.uid, appKey, user.active, user.location, user.customs))
 
   implicit val itemReads: Reads[Item] = (
-    (__ \ "pio_iid").read[String] and
+    (__ \ "pio_iid").read[ItemId] and
       (__ \ "pio_itypes").readNullable[Set[String]].map {
         case Some(xs) => xs
         case _ => Set.empty[String]
@@ -84,7 +105,7 @@ class JsonFormat(appKey: String) {
     )(Item.apply _)
 
   implicit val itemWrites: Writes[Item] = (
-    (__ \ "pio_iid").write[String] and
+    (__ \ "pio_iid").write[ItemId] and
       (__ \ "pio_appkey").write[String] and
       (__ \ "pio_itypes").write[String] and
       (__ \ "pio_inactive").write[Boolean] and
@@ -109,9 +130,9 @@ class JsonFormat(appKey: String) {
 
   implicit val actionWrites: Writes[Action] = (
     (__ \ "pio_appkey").write[String] and
-      (__ \ "pio_uid").write[String] and
-      (__ \ "pio_iid").write[String] and
-      (__ \ "pio_action").write[String] and
+      (__ \ "pio_uid").write[UserId] and
+      (__ \ "pio_iid").write[ItemId] and
+      (__ \ "pio_action").write[U2IAction] and
       (__ \ "pio_rate").writeNullable[Int] and
       (__ \ "pio_latlng").writeNullable[Location] and
       (__ \ "pio_t").writeNullable[DateTime] and

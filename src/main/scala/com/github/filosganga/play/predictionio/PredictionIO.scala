@@ -36,7 +36,7 @@ object PredictionIO {
   private def api(implicit app: Application): Api =
     app.plugin[HasApi].getOrElse(throw pluginNotRegisteredError).api
 
-  def createUser(uid: String,
+  def createUser(uid: UserId,
                  active: Boolean = true,
                  location: Option[Location] = None,
                  customs: Map[String, String] = Map.empty)
@@ -48,15 +48,15 @@ object PredictionIO {
     api.createUser(user)
   }
 
-  def getUser(uid: String)(implicit app: Application, ec: ExecutionContext): Future[User] = {
+  def getUser(uid: UserId)(implicit app: Application, ec: ExecutionContext): Future[User] = {
     api.getUser(uid)
   }
 
-  def deleteUser(uid: String)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
+  def deleteUser(uid: UserId)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
     api.deleteUser(uid)
   }
 
-  def createItem(id: String,
+  def createItem(id: ItemId,
                  types: Set[String],
                  active: Boolean = true,
                  location: Option[Location] = None,
@@ -73,16 +73,16 @@ object PredictionIO {
     api.createItem(item)
   }
 
-  def getItem(id: String)(implicit app: Application, ec: ExecutionContext): Future[Item] =
+  def getItem(id: ItemId)(implicit app: Application, ec: ExecutionContext): Future[Item] =
     api.getItem(id)
 
-  def deleteItem(id: String)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
+  def deleteItem(id: ItemId)(implicit app: Application, ec: ExecutionContext): Future[Unit] = {
     api.deleteItem(id)
   }
 
-  def userActionItem(userId: String,
-                     itemId: String,
-                     action: String,
+  def userActionItem(userId: UserId,
+                     itemId: ItemId,
+                     action: U2IAction,
                      rate: Option[Int] = None,
                      dateTime: Option[DateTime] = None,
                      location: Option[Location] = None,
@@ -97,7 +97,7 @@ object PredictionIO {
   }
 
   def getItemsInfoRecTopN(engine: String,
-                          userId: String,
+                          userId: UserId,
                           n: Int = 15,
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
@@ -108,7 +108,7 @@ object PredictionIO {
   }
 
   def getItemsInfoSimTopN(engine: String,
-                          targetId: String,
+                          targetId: ItemId,
                           n: Int = 15,
                           types: Set[String] = Set.empty,
                           attributes: Set[String] = Set.empty,
@@ -119,7 +119,7 @@ object PredictionIO {
   }
 
   def getItemsRecTopN(engine: String,
-                      userId: String,
+                      userId: UserId,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
@@ -127,12 +127,12 @@ object PredictionIO {
                       distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
 
     getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).flatMap {
-      xs => Future.sequence(xs.map(x => getItem(x.id)))
+      xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
     }
   }
 
   def getItemsSimTopN(engine: String,
-                      targetId: String,
+                      targetId: ItemId,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
@@ -140,7 +140,7 @@ object PredictionIO {
                       distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[Iterable[Item]] = {
 
     getItemsInfoSimTopN(engine, targetId, n, types, attributes, location, distance).flatMap {
-      xs => Future.sequence(xs.map(x => getItem(x.id)))
+      xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
     }
   }
 

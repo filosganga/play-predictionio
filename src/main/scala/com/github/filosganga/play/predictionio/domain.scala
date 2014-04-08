@@ -21,13 +21,25 @@ import org.joda.time.DateTime
  * under the License.
  */
 
+case class UserId(value:String) extends AnyVal
+case class ItemId(value:String) extends AnyVal
+sealed trait U2IAction
+case object U2IAction {
+  case object Like extends U2IAction
+  case object Dislike extends U2IAction
+  case object Rate extends U2IAction
+  case object View extends U2IAction
+  case object ViewDetails extends U2IAction
+  case object Conversion extends U2IAction
+}
 
-case class User(uid: String,
+
+case class User(uid: UserId,
                 active: Boolean = true,
                 location: Option[Location] = None,
                 customs: Map[String, String] = Map.empty)
 
-case class Item(iid: String,
+case class Item(iid: ItemId,
                 types: Set[String] = Set.empty,
                 active: Boolean = true,
                 location: Option[Location] = None,
@@ -37,9 +49,9 @@ case class Item(iid: String,
                 profit: Option[Double] = None,
                 customs: Map[String, String] = Map.empty)
 
-case class Action(userId: String,
-                  itemId: String,
-                  action: String,
+case class Action(userId: UserId,
+                  itemId: ItemId,
+                  action: U2IAction,
                   rate: Option[Int] = None,
                   location: Option[Location] = None,
                   time: Option[DateTime] = None,
