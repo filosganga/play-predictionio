@@ -15,7 +15,7 @@ trait Api {
 
   lazy val format = new JsonFormat(apiKey)
 
-  def getUser(id: String)(implicit ec: ExecutionContext): Future[User] = {
+  def getUser(id: UserId)(implicit ec: ExecutionContext): Future[User] = {
 
     import format._
 
@@ -39,14 +39,14 @@ trait Api {
     }
   }
 
-  def deleteUser(uid: String)(implicit ec: ExecutionContext): Future[Unit] = {
+  def deleteUser(uid: UserId)(implicit ec: ExecutionContext): Future[Unit] = {
     WS.url(s"$endpoint/users/$uid.json").withQueryString("pio_appkey" -> apiKey).delete().map {
       case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
       case _ => Future.successful()
     }
   }
 
-  def getItem(id: String)(implicit ec: ExecutionContext): Future[Item] = {
+  def getItem(id: ItemId)(implicit ec: ExecutionContext): Future[Item] = {
 
     import format._
 
@@ -68,7 +68,7 @@ trait Api {
     }
   }
 
-  def deleteItem(id: String)(implicit ec: ExecutionContext): Future[Unit] = future {
+  def deleteItem(id: ItemId)(implicit ec: ExecutionContext): Future[Unit] = future {
     WS.url(s"$endpoint/items/$id.json").withQueryString("pio_appkey" -> apiKey).delete().flatMap {
       case response if response.status >= 300 => Future.failed(new RuntimeException(response.statusText))
       case _ => Future.successful()
@@ -86,7 +86,7 @@ trait Api {
   }
 
   def getItemsRecTopN(engine: String,
-                      userId: String,
+                      userId: UserId,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
@@ -98,7 +98,7 @@ trait Api {
 
     val parameters = Seq(
       "pio_appkey" -> apiKey,
-      "pio_uid" -> userId,
+      "pio_uid" -> userId.value,
       "pio_n" -> s"$n"
     ) ++
       (if (types.nonEmpty) Seq("pio_itypes" -> types.mkString(",")) else Nil) ++
@@ -117,7 +117,7 @@ trait Api {
   }
 
   def getItemsSimTopN(engine: String,
-                      targetId: String,
+                      targetId: ItemId,
                       n: Int = 15,
                       types: Set[String] = Set.empty,
                       attributes: Set[String] = Set.empty,
@@ -129,7 +129,7 @@ trait Api {
 
     val parameters = Seq(
       "pio_appkey" -> apiKey,
-      "pio_iid" -> targetId,
+      "pio_iid" -> targetId.value,
       "pio_n" -> s"$n"
     ) ++
       (if (types.nonEmpty) Seq("pio_itypes" -> types.mkString(",")) else Nil) ++

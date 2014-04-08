@@ -44,7 +44,7 @@ class JsonFormatSpec extends Specification {
             | }
           """.stripMargin)).get
 
-        user should be equalTo User("test")
+        user should be equalTo User(UserId("test"))
       }
 
       "with active" in new ThisScope {
@@ -59,7 +59,7 @@ class JsonFormatSpec extends Specification {
             | }
           """.stripMargin)).get
 
-        user should be equalTo User("test", active = false)
+        user should be equalTo User(UserId("test"), active = false)
       }
 
 
@@ -75,7 +75,7 @@ class JsonFormatSpec extends Specification {
             | }
           """.stripMargin)).get
 
-        user should be equalTo User("test", location = Some(Location(12.34, 5.67)))
+        user should be equalTo User(UserId("test"), location = Some(Location(12.34, 5.67)))
       }
 
       "with customs" in new ThisScope {
@@ -91,7 +91,7 @@ class JsonFormatSpec extends Specification {
             | }
           """.stripMargin)).get
 
-        user should be equalTo User("test", customs = Map("foo"->"bar", "aaa"->"bbb"))
+        user should be equalTo User(UserId("test"), customs = Map("foo"->"bar", "aaa"->"bbb"))
       }
 
       "with all fields" in new ThisScope {
@@ -109,7 +109,7 @@ class JsonFormatSpec extends Specification {
             | }
           """.stripMargin)).get
 
-        user should be equalTo User("test", active = false, location = Some(Location(12.34, 5.67)), customs = Map("foo"->"bar", "aaa"->"bbb"))
+        user should be equalTo User(UserId("test"), active = false, location = Some(Location(12.34, 5.67)), customs = Map("foo"->"bar", "aaa"->"bbb"))
       }
     }
   }
@@ -121,7 +121,7 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(User("test"))
+        val json = Json.toJson(User(UserId("test")))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("test")
@@ -131,7 +131,7 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(User("test", active = false))
+        val json = Json.toJson(User(UserId("test"), active = false))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("test")
@@ -142,7 +142,7 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(User("test", location = Some(Location(9.4, 3.4))))
+        val json = Json.toJson(User(UserId("test"), location = Some(Location(9.4, 3.4))))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("test")
@@ -153,7 +153,7 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(User("test", customs = Map("foo"->"Bar")))
+        val json = Json.toJson(User(UserId("test"), customs = Map("foo"->"Bar")))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("test")
@@ -164,7 +164,7 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(User("test", active = false, location = Some(Location(12.3, 45.6)), customs = Map("foo"->"Bar")))
+        val json = Json.toJson(User(UserId("test"), active = false, location = Some(Location(12.3, 45.6)), customs = Map("foo"->"Bar")))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("test")
@@ -192,7 +192,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test")
+        item should be equalTo Item(ItemId("test"))
       }
 
       "with active" in new ThisScope {
@@ -210,7 +210,7 @@ class JsonFormatSpec extends Specification {
           valid => valid
         )
 
-        item should be equalTo Item("test", active = false)
+        item should be equalTo Item(ItemId("test"), active = false)
       }
 
       "with types" in new ThisScope {
@@ -227,7 +227,7 @@ class JsonFormatSpec extends Specification {
             invalid => throw new RuntimeException(invalid.mkString(",")),
             valid => valid
           )
-        item should be equalTo Item("test", types = Set("one", "two", "three"))
+        item should be equalTo Item(ItemId("test"), types = Set("one", "two", "three"))
       }
 
 
@@ -245,7 +245,7 @@ class JsonFormatSpec extends Specification {
             invalid => throw new RuntimeException(invalid.mkString(",")),
             valid => valid
           )
-        item should be equalTo Item("test", location = Some(Location(12.34, 5.67)))
+        item should be equalTo Item(ItemId("test"), location = Some(Location(12.34, 5.67)))
       }
 
       "with price" in new ThisScope {
@@ -262,7 +262,7 @@ class JsonFormatSpec extends Specification {
             invalid => throw new RuntimeException(invalid.mkString(",")),
             valid => valid
           )
-        item should be equalTo Item("test", price = Some(123.67))
+        item should be equalTo Item(ItemId("test"), price = Some(123.67))
       }
 
       "with profit" in new ThisScope {
@@ -280,7 +280,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test", profit = Some(123.67))
+        item should be equalTo Item(ItemId("test"), profit = Some(123.67))
       }
 
       "with start time" in new ThisScope {
@@ -298,7 +298,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test", startTime = Some(new DateTime(123456789L)))
+        item should be equalTo Item(ItemId("test"), startTime = Some(new DateTime(123456789L)))
       }
 
       "with end time" in new ThisScope {
@@ -316,7 +316,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test", endTime = Some(new DateTime(123456790L)))
+        item should be equalTo Item(ItemId("test"), endTime = Some(new DateTime(123456790L)))
       }
 
       "with customs" in new ThisScope {
@@ -335,7 +335,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test", customs = Map("foo"->"bar", "aaa"->"bbb"))
+        item should be equalTo Item(ItemId("test"), customs = Map("foo"->"bar", "aaa"->"bbb"))
       }
 
       "with all fields" in new ThisScope {
@@ -361,7 +361,7 @@ class JsonFormatSpec extends Specification {
             valid => valid
           )
 
-        item should be equalTo Item("test", Set("one", "two", "three"), active = false, Some(Location(12.34, 5.67)), Some(new DateTime(123456789L)), Some(new DateTime(123456790L)), Some(321.67), Some(123.67), Map("foo"->"bar", "aaa"->"bbb"))
+        item should be equalTo Item(ItemId("test"), Set("one", "two", "three"), active = false, Some(Location(12.34, 5.67)), Some(new DateTime(123456789L)), Some(new DateTime(123456790L)), Some(321.67), Some(123.67), Map("foo"->"bar", "aaa"->"bbb"))
       }
     }
   }
@@ -373,7 +373,7 @@ class JsonFormatSpec extends Specification {
         import jsonFormat._
 
         val json = Json.toJson(Item(
-          iid = "test",
+          iid = ItemId("test"),
           types = Set("foo", "bar"),
           active = false,
           location = Some(Location(12.3, 45.6)),
@@ -404,12 +404,12 @@ class JsonFormatSpec extends Specification {
 
         import jsonFormat._
 
-        val json = Json.toJson(Action("jhon","apple", "eat", Some(9), Some(Location(9.8, 34.8)), Some(new DateTime(2013, 6, 23,12,30)), Map("foo"->"bar")))
+        val json = Json.toJson(Action(UserId("jhon"),ItemId("apple"), U2IAction.Like, Some(9), Some(Location(9.8, 34.8)), Some(new DateTime(2013, 6, 23,12,30)), Map("foo"->"bar")))
 
         (json \ "pio_appkey").validate[String] should be equalTo JsSuccess(appKey)
         (json \ "pio_uid").validate[String] should be equalTo JsSuccess("jhon")
         (json \ "pio_iid").validate[String] should be equalTo JsSuccess("apple")
-        (json \ "pio_action").validate[String] should be equalTo JsSuccess("eat")
+        (json \ "pio_action").validate[String] should be equalTo JsSuccess("like")
         (json \ "pio_rate").validate[Int] should be equalTo JsSuccess(9)
         (json \ "pio_latlng").validate[String] should be equalTo JsSuccess("34.8,9.8")
         (json \ "pio_t").validate[DateTime] should be equalTo JsSuccess(new DateTime(2013, 6, 23,12,30))
