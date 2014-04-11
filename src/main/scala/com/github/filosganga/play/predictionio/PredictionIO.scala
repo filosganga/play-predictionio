@@ -127,7 +127,7 @@ object PredictionIO {
                       distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[Item]] = {
 
     getItemsInfoRecTopN(engine, userId, n, types, attributes, location, distance).flatMap {
-      xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
+      xs => Future.sequence(xs.map(x => getItem(x.id)))
     }
   }
 
@@ -140,7 +140,7 @@ object PredictionIO {
                       distance: Option[Distance])(implicit app: Application, ec: ExecutionContext): Future[immutable.Seq[Item]] = {
 
     getItemsInfoSimTopN(engine, targetId, n, types, attributes, location, distance).flatMap {
-      xs => Future.sequence(xs.map(x => getItem(ItemId(x.id))))
+      xs => Future.sequence(xs.map(x => getItem(x.id)))
     }
   }
 
