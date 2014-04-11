@@ -49,6 +49,16 @@ pomExtra :=
       </roles>
       <timezone>GMT</timezone>
     </developer>
+    <developer>
+      <id>jeantil</id>
+      <name>Jean Helou</name>
+      <url>http://blog.byjean.eu</url>
+      <email>jean.helou+github@gmail.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>CET</timezone>
+    </developer>
   </developers>
 
 
