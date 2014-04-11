@@ -19,10 +19,11 @@
 
 package com.github.filosganga.play.predictionio
 
-import play.api.libs.json.{JsSuccess, Json}
+import play.api.libs.json._
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import org.joda.time.DateTime
+import scala.collection.immutable
 
 
 /**
@@ -418,6 +419,29 @@ class JsonFormatSpec extends Specification {
     }
   }
 
+  "predictionRead" should{
+    "be able to read a prediction result in a Seq[ItemInfo]" in new ThisScope{
+      import jsonFormat.predictionRead
+      val json=Json.parse(
+        """
+          |{
+          |  "pio_iids": [
+          |  "52d970c46c00006b004ac6d3",
+          |  "52de8270c30000c200c21fd3"
+          |  ],
+          |  "name": [
+          |  "foo",
+          |  "bar"
+          |  ]
+          |}
+        """.stripMargin)
+      val items=List(
+        ItemInfo(ItemId("52d970c46c00006b004ac6d3"), Map("name"->"foo")),
+        ItemInfo(ItemId("52de8270c30000c200c21fd3"), Map("name"->"bar"))
+      )
+      json.validate[immutable.Seq[ItemInfo]](predictionRead) === JsSuccess(items)
+    }
+  }
 
   trait ThisScope extends Scope {
 

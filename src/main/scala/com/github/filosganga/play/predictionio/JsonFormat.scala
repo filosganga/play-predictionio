@@ -139,11 +139,24 @@ class JsonFormat(appKey: String) {
       __.write[Map[String, String]]
     )(action => (appKey, action.userId, action.itemId, action.action, action.rate, action.location, action.time, action.customs))
 
-  implicit val itemInfoRead: Reads[ItemInfo] = Reads {
-    case JsString(value) => JsSuccess(ItemInfo(value, Set.empty))
-    case JsObject((id, JsArray(types)) :: Nil) => JsSuccess(ItemInfo(id, types.collect {
-      case JsString(x) => x
-    }.toSet))
-    case _ => JsError("Error parsing ItemInfo")
+  import scala.collection.immutable
+  implicit val predictionRead:Reads[immutable.Seq[ItemInfo]] = {
+    def toSeqItemInfo(ids:immutable.Seq[ItemId], attributes:Map[String,List[String]]):immutable.Seq[ItemInfo]={
+      val attributesWithIds=attributes.transform((k,v)=>ids.zip(v).toMap)
+      val attributesById=attributesWithIds.map{
+        case (at,map)=> map.map{
+          case (k,v) => k -> (at -> v)
+        }}.flatten
+        .groupBy{ case(k,v)=>k}
+        .transform((k,v)=>v.map{case(i,j)=>j}.toMap).withDefaultValue(Map())
+      ids.map(id=> ItemInfo(id, attributesById(id)))
+    }
+    val tuple=(
+      (__ \ "pio_iids").read[immutable.Seq[ItemId]] and
+        __.read(
+          (__ \ "pio_iids").json.prune.map(x=>x.as[Map[String,List[String]]])
+        )
+      ).tupled
+    tuple.map((toSeqItemInfo _).tupled.apply)
   }
 }
