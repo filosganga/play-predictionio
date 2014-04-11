@@ -27,6 +27,16 @@ package com.github.filosganga.play
  */
 package object predictionio {
 
+  trait PredictionIOException {
+    val message = ""
+    val cause: Throwable = null
+  }
 
+  case class NoRecommendationException(override val message: String, override val cause: Throwable = null) extends Exception(message, cause, true, false) with PredictionIOException
+
+  case class PredictionIOServerException(override val message: String, override val cause: Throwable = null) extends Exception(message, cause, true, false) with PredictionIOException
+
+  case class PredictionIOClientException(override val message: String, override val cause: Throwable = null) extends Exception(message, cause, true, false) with PredictionIOException
 
 }
+
