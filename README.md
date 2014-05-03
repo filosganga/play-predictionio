@@ -25,6 +25,11 @@ Creating an User:
 val userFuture = PredictionIO.createUser(uid)
 ```
 
+Other Interesting Projects
+==========================
+
+Give a try to the [HikariCP](https://github.com/brettwooldridge/HikariCP) and the [HikaryCP Play! Plugin](http://edulify.github.io/play-hikaricp.edulify.com/)
+
 
 Support
 =======
